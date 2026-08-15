@@ -1,0 +1,22 @@
+# Vivado temporary and log files
+/.Xil/
+*.jou
+*.log
+*.str
+*.os
+*.pp
+
+# Compilation and Simulation outputs
+*.dir/
+*.pb
+*.rpt
+*.vdi
+*.dcp
+*.xml
+
+# Project IP and Run artifacts
+*.ip_user_files/
+*.hw/
+*.sim/
+*.runs/
+*.cache/
