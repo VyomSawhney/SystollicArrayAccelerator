@@ -11,15 +11,35 @@ module systollic_array #(
     input logic en,
     input logic signed [DATA_W-1:0] weight [N][N],
     input logic signed [DATA_W-1:0] A_in [N],
-    output logic signed [ACC_W-1:0] out0,
-    output logic signed [ACC_W-1:0] out1
+    output logic signed [ACC_W-1:0] out [N]
     );
-    logic signed [ACC_W-1:0] psum00;
-    logic signed [DATA_W-1:0] a00;
-    logic signed [ACC_W-1:0] psum01;
-    logic signed [DATA_W-1:0] a10;
-    pe e00(.clk (clk), .rst_n (rst_n), .load_weight (load_weight), .en (en), .a_in (A_in[0]), .weight (weight[0][0]), .psum_in ('0), .psum_out (psum00), .a_out (a00));
-    pe e01(.clk (clk), .rst_n (rst_n), .load_weight (load_weight), .en (en), .a_in (a00), .weight (weight[0][1]), .psum_in ('0), .psum_out (psum01));
-    pe e10(.clk (clk), .rst_n (rst_n), .load_weight (load_weight), .en (en), .a_in (A_in[1]), .weight (weight[1][0]), .psum_in (psum00), .psum_out (out0), .a_out (a10));
-    pe e11(.clk (clk), .rst_n (rst_n), .load_weight (load_weight), .en (en), .a_in (a10), .weight (weight[1][1]), .psum_in (psum01), .psum_out (out1));
+
+    logic signed [DATA_W-1:0] a_link [N][N+1];
+    logic signed [ACC_W-1:0] psum_link [N+1][N];
+
+    for(genvar i = 0; i < N; i++) begin : INPUTS
+        assign a_link[i][0] = A_in[i];
+        assign psum_link[0][i] = '0;
+    end
+
+    for(genvar i = 0; i < N; i++) begin : ROW
+        for(genvar j = 0; j < N; j++) begin : COL
+            pe e(
+                .clk(clk),
+                .rst_n(rst_n),
+                .load_weight(load_weight),
+                .en(en),
+                .a_in(a_link[i][j]),
+                .weight(weight[i][j]),
+                .psum_in(psum_link[i][j]),
+                .psum_out(psum_link[i+1][j]),
+                .a_out(a_link[i][j+1])
+            );
+        end
+    end
+
+    for(genvar i = 0; i < N; i++) begin : OUTPUTS
+        assign out[i] = psum_link[N][i];
+    end
+
 endmodule
