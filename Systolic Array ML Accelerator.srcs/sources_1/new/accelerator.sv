@@ -1,0 +1,60 @@
+`timescale 1ns / 1ps
+
+module accelerator#(
+    parameter N = 2,
+    parameter DATA_W = 16,
+    parameter ACC_W = 32
+)(
+    input logic clk,
+    input logic rst_n,
+    input logic start,
+    input logic signed [DATA_W-1:0] weight [N][N],
+    input logic signed [DATA_W-1:0] A_in [N],
+    output logic done,
+    output logic signed [ACC_W-1:0] out [N]
+);
+    logic load_en;
+    logic skew_en;
+    logic compute_en;
+    logic drain_en;
+    logic signed [DATA_W-1:0] skew_in [N];
+    logic signed [DATA_W-1:0] skew_out [N];
+    controller#(
+        .N(N)
+    ) con(
+        .clk(clk),
+        .rst_n(rst_n),
+        .start(start),
+        .load_weights(load_en),
+        .skew_en(skew_en),
+        .compute_en(compute_en),
+        .drain_en(drain_en),
+        .done(done)
+    );
+    for(genvar i = 0; i<N; i++) begin
+        assign skew_in[i] = drain_en ? '0 : A_in[i];
+    end
+    input_skew_buffer#(
+        .DATA_W(DATA_W),
+        .N(N)
+    ) buff(
+        .clk(clk),
+        .rst_n(rst_n),
+        .en(skew_en),
+        .data_in(skew_in),
+        .data_out(skew_out)
+    );
+    systollic_array#(
+        .DATA_W(DATA_W),
+        .ACC_W(ACC_W),
+        .N(N)
+    ) array(
+        .clk(clk),
+        .rst_n(rst_n),
+        .en(compute_en),
+        .load_weight(load_en),
+        .weight(weight),
+        .A_in(skew_out),
+        .out(out)
+    );
+endmodule
