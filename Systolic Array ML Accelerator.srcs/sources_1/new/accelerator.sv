@@ -3,7 +3,7 @@
 module accelerator#(
     parameter N = 2,
     parameter DATA_W = 16,
-    parameter ACC_W = 32
+    parameter ACC_W = 2*DATA_W + $clog2(N)
 )(
     input logic clk,
     input logic rst_n,
@@ -13,6 +13,9 @@ module accelerator#(
     output logic done,
     output logic signed [ACC_W-1:0] out [N]
 );
+    if (ACC_W < 2*DATA_W + $clog2(N))
+        $error("ACC_W=%0d too narrow for DATA_W=%0d N=%0d, need %0d", ACC_W, DATA_W, N, 2*DATA_W + $clog2(N));
+
     logic load_en;
     logic skew_en;
     logic compute_en;

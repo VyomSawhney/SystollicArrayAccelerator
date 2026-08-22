@@ -2,8 +2,8 @@
 
 module accelerator_tb#(
     parameter DATA_W = 16,
-    parameter ACC_W = 32,
-    parameter N = 2
+    parameter N = 2,
+    parameter ACC_W = 2*DATA_W + $clog2(N)
 );
     logic clk;
     logic rst_n;
@@ -13,7 +13,11 @@ module accelerator_tb#(
     logic done;
     logic signed [ACC_W-1:0] out [N];
     
-    accelerator dut(
+    accelerator#(
+        .N(N),
+        .DATA_W(DATA_W),
+        .ACC_W(ACC_W)
+    ) dut(
         .clk(clk),
         .rst_n(rst_n),
         .start(start),

@@ -2,8 +2,8 @@
 
 module systollic_array #(
     parameter DATA_W = 16,
-    parameter ACC_W = 32,
-    parameter N = 2
+    parameter N = 2,
+    parameter ACC_W = 2*DATA_W + $clog2(N)
 )(
     input logic clk,
     input logic rst_n,
@@ -13,6 +13,9 @@ module systollic_array #(
     input logic signed [DATA_W-1:0] A_in [N],
     output logic signed [ACC_W-1:0] out [N]
     );
+
+    if (ACC_W < 2*DATA_W + $clog2(N))
+        $error("ACC_W=%0d too narrow for DATA_W=%0d N=%0d, need %0d", ACC_W, DATA_W, N, 2*DATA_W + $clog2(N));
 
     logic signed [DATA_W-1:0] a_link [N][N+1];
     logic signed [ACC_W-1:0] psum_link [N+1][N];
@@ -24,7 +27,10 @@ module systollic_array #(
 
     for(genvar i = 0; i < N; i++) begin : ROW
         for(genvar j = 0; j < N; j++) begin : COL
-            pe e(
+            pe #(
+                .DATA_W(DATA_W),
+                .ACC_W(ACC_W)
+            ) e(
                 .clk(clk),
                 .rst_n(rst_n),
                 .load_weight(load_weight),

@@ -2,8 +2,8 @@
 
 module systollic_array_tb#(
     parameter DATA_W = 16,
-    parameter ACC_W = 32,
-    parameter N = 2
+    parameter N = 2,
+    parameter ACC_W = 2*DATA_W + $clog2(N)
 );
     logic clk;
     logic rst_n;
@@ -13,7 +13,11 @@ module systollic_array_tb#(
     logic signed [DATA_W-1:0] A_in [N];
     logic signed [ACC_W-1:0] out [N];
     
-    systollic_array dut(
+    systollic_array#(
+        .DATA_W(DATA_W),
+        .N(N),
+        .ACC_W(ACC_W)
+    ) dut(
         .clk(clk),
         .rst_n(rst_n),
         .load_weight(load_weight),
